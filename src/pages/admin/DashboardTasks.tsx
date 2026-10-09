@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { getTasks, saveTasks, getSchedule, saveSchedule } from '../../services/storageService';
-import { BookOpen, Calendar, Clock, Plus, Trash2, Image as ImageIcon, CalendarDays } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 
 export const DashboardTasks: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'tugas' | 'jadwal'>('tugas');
   const [activeDayTab, setActiveDayTab] = useState<'senin' | 'selasa_kamis' | 'jumat'>('senin');
 
-  // --- STATE TUGAS ---
-  const [tasks, setTasks] = useState(typeof getTasks !== 'undefined' ? getTasks() : []);
+  // --- STATE TUGAS (Ditambah <any[]> agar tidak error saat di-build) ---
+  const [tasks, setTasks] = useState<any[]>(typeof getTasks !== 'undefined' ? getTasks() : []);
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('');
   const [deadline, setDeadline] = useState('');
   const [description, setDescription] = useState('');
 
-  // --- STATE JADWAL ---
-  const [schedule, setSchedule] = useState(getSchedule());
+  // --- STATE JADWAL (Ditambah <any> agar tidak error saat di-build) ---
+  const [schedule, setSchedule] = useState<any>(getSchedule());
   const [isUploading, setIsUploading] = useState(false);
 
   // LOGIKA TUGAS
@@ -36,11 +36,16 @@ export const DashboardTasks: React.FC = () => {
   const uploadKeCloudinary = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
+    
+    // PASTIKAN INI NAMA PRESET-MU YANG BENAR
     formData.append('upload_preset', 'kelas xii-f'); 
+
     const res = await fetch('https://api.cloudinary.com/v1_1/h6vcuxga/image/upload', {
       method: 'POST', body: formData,
     });
+    
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'Gagal terhubung');
     return data.secure_url;
   };
 
@@ -52,15 +57,15 @@ export const DashboardTasks: React.FC = () => {
         const url = await uploadKeCloudinary(file);
         const updated = { ...schedule, imageUrl: url };
         setSchedule(updated); saveSchedule(updated);
-      } catch (err) {
-        alert("Gagal mengunggah foto jadwal.");
+      } catch (err: any) {
+        alert("Gagal mengunggah foto: " + err.message);
       } finally {
         setIsUploading(false);
       }
     }
   };
 
-  // LOGIKA JAM PELAJARAN (Berdasarkan Kategori Hari)
+  // LOGIKA JAM PELAJARAN
   const handleAddTimeSlot = (day: string) => {
     const updated = { 
       ...schedule, 
@@ -164,11 +169,9 @@ export const DashboardTasks: React.FC = () => {
             </div>
           </div>
 
-          {/* Atur Jam Pelajaran Berdasarkan Kategori Hari */}
           <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-100 shadow-sm">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><Clock size={20} className="text-amber-500"/> Atur Jam Pelajaran</h2>
             
-            {/* Tab Kategori Hari */}
             <div className="flex bg-slate-100 p-1.5 rounded-xl mb-6">
               <button onClick={() => setActiveDayTab('senin')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${activeDayTab === 'senin' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-800'}`}>Senin</button>
               <button onClick={() => setActiveDayTab('selasa_kamis')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${activeDayTab === 'selasa_kamis' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-800'}`}>Selasa - Kamis</button>
