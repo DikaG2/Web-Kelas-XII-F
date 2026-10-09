@@ -7,14 +7,43 @@ export const DashboardMembers: React.FC = () => {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [description, setDescription] = useState('');
-  const [photoBase64, setPhotoBase64] = useState('');
+  
+  // Mengganti photoBase64 menjadi photoUrl dan menambah state loading
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ==========================================
+  // FUNGSI UPLOAD KE CLOUDINARY
+  // ==========================================
+  const uploadKeCloudinary = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // GANTI 'portal_kelas' DENGAN NAMA UPLOAD PRESET-MU SENDIRI
+    formData.append('upload_preset', 'portal_kelas'); 
+
+    // GANTI 'dika-cloud' DENGAN CLOUD NAME-MU SENDIRI
+    const res = await fetch('https://api.cloudinary.com/v1_1/dika-cloud/image/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await res.json();
+    return data.secure_url; 
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPhotoBase64(reader.result as string);
-      reader.readAsDataURL(file);
+      setIsUploading(true); // Tampilkan loading
+      try {
+        const url = await uploadKeCloudinary(file);
+        setPhotoUrl(url); // Simpan link gambar online
+      } catch (error) {
+        alert("Gagal mengunggah foto. Pastikan internet lancar dan nama preset Cloudinary benar.");
+      } finally {
+        setIsUploading(false); // Matikan loading
+      }
     }
   };
 
@@ -24,11 +53,11 @@ export const DashboardMembers: React.FC = () => {
     const newItem = {
       id: Date.now().toString(),
       name, role, description,
-      photo: photoBase64 || 'https://via.placeholder.com/150'
+      photo: photoUrl || 'https://via.placeholder.com/150'
     };
     const updated = [...members, newItem];
     setMembers(updated); saveOfficers(updated);
-    setName(''); setRole(''); setDescription(''); setPhotoBase64('');
+    setName(''); setRole(''); setDescription(''); setPhotoUrl('');
   };
 
   return (
@@ -40,8 +69,16 @@ export const DashboardMembers: React.FC = () => {
         <div className="flex gap-6 items-start flex-wrap">
           {/* Preview Foto */}
           <div className="w-28 h-28 bg-slate-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300 overflow-hidden relative shrink-0">
-            {photoBase64 ? <img src={photoBase64} className="w-full h-full object-cover"/> : <span className="text-xs text-slate-400 text-center px-2">Belum ada foto</span>}
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" required={!photoBase64} />
+            {isUploading ? (
+              <span className="text-xs text-primary font-bold text-center px-2 animate-pulse">Mengunggah...</span>
+            ) : photoUrl ? (
+              <img src={photoUrl} className="w-full h-full object-cover"/>
+            ) : (
+              <span className="text-xs text-slate-400 text-center px-2">Belum ada foto</span>
+            )}
+            
+            {/* Input file dimatikan saat sedang loading agar tidak ditumpuk */}
+            <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} className="absolute inset-0 opacity-0 cursor-pointer" required={!photoUrl} />
           </div>
 
           <div className="flex-1 space-y-4 min-w-[250px]">
@@ -53,7 +90,11 @@ export const DashboardMembers: React.FC = () => {
             <p className="text-[11px] text-slate-400 italic">*Klik kotak foto di sebelah kiri untuk memilih gambar dari laptop.</p>
           </div>
         </div>
-        <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors flex items-center gap-2"><UserPlus size={16}/> Tambah Anggota</button>
+        
+        {/* Tombol dimatikan jika gambar masih loading */}
+        <button type="submit" disabled={isUploading} className="bg-primary hover:bg-primary-dark disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors flex items-center gap-2">
+          <UserPlus size={16}/> {isUploading ? 'Tunggu Sebentar...' : 'Tambah Anggota'}
+        </button>
       </form>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -11,11 +11,11 @@ export const AdminLogin: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin123') {
+    if (username === 'admin' && password === 'siswo') {
       localStorage.setItem('xii_f_auth', 'true');
       navigate('/admin/dashboard');
     } else {
-      setError('Username atau password salah! (Gunakan admin / admin123)');
+      setError('Username atau password salah!  HINT! = usr : default, pw : kepala sekolah 2026');
     }
   };
 
@@ -42,7 +42,7 @@ export const AdminLogin: React.FC = () => {
             <div className="relative">
               <User className="absolute left-4 top-3.5 text-slate-400" size={18}/>
               <input 
-                type="text" 
+                type="password" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="admin"
