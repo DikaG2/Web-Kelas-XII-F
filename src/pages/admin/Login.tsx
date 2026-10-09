@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Lock, User, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export const AdminLogin: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -12,7 +11,7 @@ export const AdminLogin: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (username === 'admin' && password === 'siswo') {
-      localStorage.setItem('xii_f_auth', 'true');
+      sessionStorage.setItem('isAdminAuth', 'true');
       navigate('/admin/dashboard');
     } else {
       setError('Username atau password salah!  HINT! = usr : default, pw : kepala sekolah 2026');
@@ -42,10 +41,10 @@ export const AdminLogin: React.FC = () => {
             <div className="relative">
               <User className="absolute left-4 top-3.5 text-slate-400" size={18}/>
               <input 
-                type="password" 
+                type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="" // <-- Dikosongkan di sini
                 required
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-primary"
               />
@@ -59,7 +58,7 @@ export const AdminLogin: React.FC = () => {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="admin123"
+                placeholder="" // <-- Dan dikosongkan di sini juga
                 required
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-primary"
               />
