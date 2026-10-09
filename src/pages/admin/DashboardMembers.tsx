@@ -20,10 +20,10 @@ export const DashboardMembers: React.FC = () => {
     formData.append('file', file);
     
     // GANTI 'portal_kelas' DENGAN NAMA UPLOAD PRESET-MU SENDIRI
-    formData.append('upload_preset', 'portal_kelas'); 
+    formData.append('upload_preset', 'kelas xii-f'); 
 
     // GANTI 'dika-cloud' DENGAN CLOUD NAME-MU SENDIRI
-    const res = await fetch('https://api.cloudinary.com/v1_1/dika-cloud/image/upload', {
+    const res = await fetch('https://api.cloudinary.com/v1_1/h6vcuxga/image/upload', {
       method: 'POST',
       body: formData,
     });
