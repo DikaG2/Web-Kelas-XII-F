@@ -10,11 +10,22 @@ export const AdminLogin: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'siswo') {
+    
+    // 1. CEK AKUN FULL AKSES (Admin Utama)
+    if (username === 'Fnatic36 Admin' && password === 'Fnatic36') {
       sessionStorage.setItem('isAdminAuth', 'true');
+      sessionStorage.setItem('adminRole', 'full'); // Simpan status full akses
       navigate('/admin/dashboard');
-    } else {
-      setError('Username atau password salah!  HINT! = usr : default, pw : kepala sekolah 2026');
+    } 
+    // 2. CEK AKUN UPLOADER (Hanya Album & Tugas)
+    else if (username === 'Fnatic36' && password === 'Fnatic36') {
+      sessionStorage.setItem('isAdminAuth', 'true');
+      sessionStorage.setItem('adminRole', 'uploader'); // Simpan status uploader
+      navigate('/admin/album'); // Langsung diarahkan ke halaman Album
+    } 
+    // JIKA SALAH
+    else {
+      setError('Username atau password salah!, HINT! : usr&pw (nama XII-F)(angkatan)');
     }
   };
 
@@ -44,7 +55,7 @@ export const AdminLogin: React.FC = () => {
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="" // <-- Dikosongkan di sini
+                placeholder=""
                 required
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-primary"
               />
@@ -58,7 +69,7 @@ export const AdminLogin: React.FC = () => {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="" // <-- Dan dikosongkan di sini juga
+                placeholder=""
                 required
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-primary"
               />

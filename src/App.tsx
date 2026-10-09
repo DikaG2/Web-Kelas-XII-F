@@ -12,19 +12,27 @@ import { DashboardAlbum } from './pages/admin/DashboardAlbum';
 import { DashboardTasks } from './pages/admin/DashboardTasks';
 import { DashboardMembers } from './pages/admin/DashboardMembers';
 
-// --- SISTEM PROTEKSI RUTE ---
-// Mengecek apakah admin sudah login (ada data di sessionStorage)
-const ProtectedRoute = () => {
+// --- SISTEM PROTEKSI RUTE & PEMBAGIAN AKSES ---
+const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: string[] }) => {
   const isAuthenticated = sessionStorage.getItem('isAdminAuth') === 'true';
-  // Jika sudah login, izinkan masuk (Outlet). Jika belum, lempar kembali ke halaman login.
-  return isAuthenticated ? <Outlet /> : <Navigate to="/admin/login" replace />;
+  const role = sessionStorage.getItem('adminRole') || 'uploader';
+  
+  // Jika belum login sama sekali, tendang ke halaman login
+  if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
+  
+  // Jika rute ini dibatasi dan role tidak cocok, tendang ke halaman album
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to="/admin/album" replace />;
+  }
+  
+  return <Outlet />;
 };
 
 export function App() {
   return (
     <Router>
       <Routes>
-        {/* Rute Publik (Bisa diakses siapa saja) */}
+        {/* Rute Publik */}
         <Route path="/" element={<Home />} />
         <Route path="/profil" element={<Profile />} />
         <Route path="/album" element={<Album />} />
@@ -33,15 +41,22 @@ export function App() {
         {/* Rute Login Admin */}
         <Route path="/admin/login" element={<AdminLogin />} />
         
-        {/* Rute Admin (DIBUNGKUS PROTECTED ROUTE) */}
+        {/* Rute Admin (Dibungkus Proteksi) */}
         <Route path="/admin" element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardOverview />} />
-            <Route path="profile" element={<DashboardProfile />} />
+            
+            {/* Rute Khusus Full Akses (Admin Utama) */}
+            <Route element={<ProtectedRoute allowedRoles={['full']} />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<DashboardOverview />} />
+              <Route path="profile" element={<DashboardProfile />} />
+              <Route path="members" element={<DashboardMembers />} />
+            </Route>
+
+            {/* Rute Bebas (Bisa diakses Full Admin maupun Uploader) */}
             <Route path="album" element={<DashboardAlbum />} />
             <Route path="tasks" element={<DashboardTasks />} />
-            <Route path="members" element={<DashboardMembers />} />
+            
           </Route>
         </Route>
       </Routes>

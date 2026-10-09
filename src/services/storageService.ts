@@ -40,3 +40,36 @@ export const getComments = (): CommentItem[] => {
 export const saveComments = (comments: CommentItem[]) => {
   localStorage.setItem('xii_f_comments', JSON.stringify(comments));
 };
+// --- TAMBAHAN UNTUK DATA JADWAL & JAM PELAJARAN ---
+export const getSchedule = () => {
+  const data = localStorage.getItem('class_schedule');
+  
+  const defaultTimeSlots = {
+    senin: [],
+    selasa_kamis: [],
+    jumat: []
+  };
+
+  if (data) {
+    const parsed = JSON.parse(data);
+    // Mencegah error jika sebelumnya pakai versi lama (yang belum dipisah harinya)
+    if (Array.isArray(parsed.timeSlots)) {
+      parsed.timeSlots = {
+        senin: parsed.timeSlots,
+        selasa_kamis: parsed.timeSlots,
+        jumat: parsed.timeSlots
+      };
+    }
+    return parsed;
+  }
+  
+  // Data default jika belum ada yang diatur
+  return {
+    imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop',
+    timeSlots: defaultTimeSlots
+  };
+};
+
+export const saveSchedule = (data: any) => {
+  localStorage.setItem('class_schedule', JSON.stringify(data));
+};

@@ -1,72 +1,107 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '../components/Navbar';
-import { getTasks } from '../services/storageService';
-import { TaskItem } from '../types';
+import { getTasks, getSchedule } from '../services/storageService'; 
 import { BookOpen, Calendar, Clock, CheckCircle2 } from 'lucide-react';
 
 export const Tasks: React.FC = () => {
-  const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [schedule, setSchedule] = useState<any>({ imageUrl: '', timeSlots: { senin: [], selasa_kamis: [], jumat: [] } });
+  
+  // State untuk melihat jam pelajaran hari apa
+  const [activeDay, setActiveDay] = useState<'senin' | 'selasa_kamis' | 'jumat'>('senin');
 
   useEffect(() => {
-    const data = getTasks();
-    if (data) setTasks(data);
+    const taskData = typeof getTasks !== 'undefined' ? getTasks() : [];
+    setTasks(taskData);
+    setSchedule(getSchedule());
   }, []);
 
-  // Fungsi untuk memberi warna berbeda berdasarkan status tugas
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Selesai': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
-      case 'Sedang dikerjakan': return 'bg-blue-50 text-blue-600 border-blue-200';
-      case 'Terlambat': return 'bg-rose-50 text-rose-600 border-rose-200';
-      default: return 'bg-amber-50 text-amber-600 border-amber-200'; // Belum dikerjakan
-    }
-  };
+  // Ambil daftar jam berdasarkan hari yang dipilih
+  const currentSlots = schedule.timeSlots[activeDay] || [];
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 w-full flex-1 mb-20 animate-in fade-in duration-500">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 w-full flex-1 mb-20 animate-in fade-in duration-500">
         
-        {/* Header Halaman */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 w-max mx-auto mb-4">
-            <BookOpen size={14}/> Akademik
-          </span>
-          <h1 className="text-4xl font-extrabold text-slate-900 mb-3">Daftar Tugas & PR</h1>
-          <p className="text-slate-500 text-sm">Pantau jadwal deadline agar tidak ada tugas kelas XII-F yang terlewat.</p>
+        <div className="text-center mb-10">
+          <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">Akademik</span>
+          <h1 className="text-4xl font-extrabold text-slate-900 mt-4 mb-3">Jadwal & Tugas</h1>
+          <p className="text-slate-500">Pantau jadwal pelajaran dan deadline tugas kelas XII-F.</p>
         </div>
 
-        {/* Grid Daftar Tugas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {tasks.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
-              <CheckCircle2 size={48} className="text-emerald-400 mb-4" />
-              <p className="text-slate-600 font-bold text-lg">Hore! Belum ada tugas.</p>
-              <p className="text-slate-400 text-sm mt-1">Bisa santai dulu atau cek Dashboard Admin jika ada PR baru.</p>
+        {/* --- BAGIAN 1: FOTO JADWAL DINAMIS --- */}
+        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="text-primary" size={24}/>
+            <h2 className="text-2xl font-bold text-slate-800">Jadwal Pelajaran</h2>
+          </div>
+          <div className="w-full h-64 md:h-96 rounded-2xl overflow-hidden bg-slate-100 shadow-inner group relative">
+            {schedule.imageUrl ? (
+              <img src={schedule.imageUrl} alt="Jadwal Pelajaran Kelas" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+            ) : (
+              <div className="flex h-full items-center justify-center text-slate-400">Jadwal belum diatur</div>
+            )}
+          </div>
+        </div>
+
+        {/* --- BAGIAN 2: JAM PELAJARAN (Terbagi Kategori Hari) --- */}
+        <div className="bg-slate-900 rounded-3xl p-6 md:p-8 shadow-lg mb-12 text-white relative overflow-hidden">
+          <div className="absolute -right-10 -top-10 text-white/5 rotate-12">
+            <Clock size={150} />
+          </div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-6">
+              <Clock className="text-amber-400" size={24}/>
+              <h2 className="text-xl font-bold">Waktu & Jam Belajar</h2>
             </div>
-          ) : (
-            tasks.map((task) => (
-              <div key={task.id} className="bg-white p-6 md:p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all group">
-                <div>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="bg-slate-50 text-slate-700 font-extrabold text-xs px-3 py-1.5 rounded-full tracking-wide border border-slate-200">
-                      {task.subject}
-                    </span>
-                    <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full border uppercase tracking-wider ${getStatusColor(task.status)}`}>
-                      {task.status}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-xl md:text-2xl text-slate-800 mb-2 leading-snug group-hover:text-primary transition-colors">{task.title}</h3>
-                  {task.description && <p className="text-slate-500 text-sm mb-6 line-clamp-3 leading-relaxed">{task.description}</p>}
+            
+            {/* Pilihan Hari */}
+            <div className="flex gap-2 mb-6">
+              <button onClick={() => setActiveDay('senin')} className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${activeDay === 'senin' ? 'bg-amber-400 text-slate-900' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>Senin</button>
+              <button onClick={() => setActiveDay('selasa_kamis')} className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${activeDay === 'selasa_kamis' ? 'bg-amber-400 text-slate-900' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>Selasa - Kamis</button>
+              <button onClick={() => setActiveDay('jumat')} className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${activeDay === 'jumat' ? 'bg-amber-400 text-slate-900' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>Jumat</button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-sm font-medium animate-in fade-in key={activeDay}">
+              {currentSlots.map((ts: any) => (
+                <div key={ts.id} className={`flex justify-between border-b border-slate-700 pb-2 ${ts.isBreak ? 'text-amber-400 font-bold' : 'text-slate-200'}`}>
+                  <span>{ts.label}</span> 
+                  <span>{ts.time}</span>
                 </div>
-                <div className="pt-5 border-t border-slate-100 flex items-center justify-between text-sm mt-auto">
-                  <span className="text-slate-500 font-medium flex items-center gap-1.5"><Clock size={16}/> Deadline:</span>
-                  <strong className="text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-rose-100"><Calendar size={14}/> {task.deadline}</strong>
+              ))}
+              {currentSlots.length === 0 && <p className="text-slate-400 italic">Jam pelajaran untuk hari ini belum diatur.</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* --- BAGIAN 3: DAFTAR TUGAS --- */}
+        <div className="flex items-center gap-2 mb-6">
+          <BookOpen className="text-blue-500" size={24}/>
+          <h2 className="text-2xl font-bold text-slate-800">Daftar Tugas & PR</h2>
+        </div>
+
+        {tasks.length === 0 ? (
+          <div className="bg-white rounded-3xl p-10 border border-dashed border-slate-300 text-center">
+            <CheckCircle2 className="mx-auto text-emerald-400 mb-4" size={48}/>
+            <h3 className="font-bold text-slate-800 text-lg mb-1">Hore! Belum ada tugas.</h3>
+            <p className="text-slate-500 text-sm max-w-xs mx-auto">Bisa santai dulu atau cek Dashboard Admin jika ada PR baru.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {tasks.map((t: any) => (
+              <div key={t.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
+                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-md w-fit mb-2 uppercase tracking-wider">{t.subject}</span>
+                <h4 className="font-bold text-slate-800 text-base mb-2 line-clamp-2">{t.title}</h4>
+                <p className="text-xs text-slate-500 mb-4 flex-1 line-clamp-3">{t.description}</p>
+                <div className="text-xs font-bold text-rose-500 bg-rose-50 px-3 py-1.5 rounded-lg w-fit">
+                  Deadline: {t.deadline || 'Belum diatur'}
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
       </div>
     </div>
