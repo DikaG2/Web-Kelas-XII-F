@@ -8,24 +8,28 @@ export const AdminLogin: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Membersihkan spasi di awal/akhir teks yang diinput di HP
+    const cleanUser = username.trim();
+    const cleanPass = password.trim();
+    
     // 1. CEK AKUN FULL AKSES (Admin Utama)
-    if (username === 'Fnatic36 Admin' && password === 'Fnatic36') {
+    if (cleanUser === 'Fnatic36 Admin' && cleanPass === 'Fnatic36') {
       sessionStorage.setItem('isAdminAuth', 'true');
-      sessionStorage.setItem('adminRole', 'full'); // Simpan status full akses
+      sessionStorage.setItem('adminRole', 'full');
       navigate('/admin/dashboard');
     } 
     // 2. CEK AKUN UPLOADER (Hanya Album & Tugas)
-    else if (username === 'Fnatic36' && password === 'Fnatic36') {
+    else if (cleanUser === 'Fnatic36' && cleanPass === 'Fnatic36') {
       sessionStorage.setItem('isAdminAuth', 'true');
-      sessionStorage.setItem('adminRole', 'uploader'); // Simpan status uploader
-      navigate('/admin/album'); // Langsung diarahkan ke halaman Album
+      sessionStorage.setItem('adminRole', 'uploader');
+      navigate('/admin/album');
     } 
     // JIKA SALAH
     else {
-      setError('Username atau password salah!, HINT! : usr&pw (nama XII-F)(angkatan)');
+      setError('Username atau password salah!');
     }
   };
 
